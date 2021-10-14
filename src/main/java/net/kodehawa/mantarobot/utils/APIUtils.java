@@ -20,6 +20,9 @@ import net.kodehawa.mantarobot.MantaroInfo;
 import net.kodehawa.mantarobot.commands.currency.profile.Badge;
 import net.kodehawa.mantarobot.data.Config;
 import net.kodehawa.mantarobot.data.MantaroData;
+import net.kodehawa.mantarobot.utils.data.JsonDataManager;
+import net.kodehawa.mantarobot.utils.patreon.PatreonPledge;
+import nonapi.io.github.classgraph.json.JSONUtils;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -87,7 +90,7 @@ public class APIUtils {
         }
     }
 
-    public static Pair<Boolean, String> getPledgeInformation(String user) {
+    public static PatreonPledge getPledgeInformation(String user) {
         if (!config.needApi) {
             return null; //nothing to query on.
         }
@@ -113,8 +116,7 @@ public class APIUtils {
                 }
 
                 var reply = new JSONObject(new JSONTokener(body.byteStream()));
-
-                return new Pair<>(reply.getBoolean("active"), reply.getString("amount"));
+                return JsonDataManager.fromJson(reply.toString(), PatreonPledge.class);
             }
 
         } catch (Exception ex) {
@@ -122,9 +124,9 @@ public class APIUtils {
             ex.printStackTrace();
 
             if (config.isPremiumBot()) {
-                // Same as above, but send pledge = false but an amount of 4. This is to signal the
+                // Same as above, but send pledge = false but an amount of 100000. This is to signal the
                 // handler that we have a wrong reply.
-                return Pair.of(false, "100000");
+                return new PatreonPledge(100000, false, null);
             } else {
                 return null;
             }

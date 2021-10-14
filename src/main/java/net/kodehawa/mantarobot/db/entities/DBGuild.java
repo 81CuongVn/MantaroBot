@@ -31,6 +31,7 @@ import net.kodehawa.mantarobot.db.entities.helpers.UserData;
 import net.kodehawa.mantarobot.utils.APIUtils;
 import net.kodehawa.mantarobot.utils.Pair;
 import net.kodehawa.mantarobot.utils.Utils;
+import net.kodehawa.mantarobot.utils.patreon.PatreonPledge;
 
 import javax.annotation.Nonnull;
 import java.beans.ConstructorProperties;
@@ -103,8 +104,8 @@ public class DBGuild implements ManagedObject {
 
             //Link key to owner if key == owner and key holder is on patreon.
             //Sadly gotta skip of holder isn't patron here bc there are some bought keys (paypal) which I can't convert without invalidating
-            Pair<Boolean, String> pledgeInfo = APIUtils.getPledgeInformation(key.getOwner());
-            if (pledgeInfo != null && pledgeInfo.getLeft()) {
+            PatreonPledge pledgeInfo = APIUtils.getPledgeInformation(key.getOwner());
+            if (pledgeInfo != null && pledgeInfo.isActive() && pledgeInfo.getReward().getKeys() >= 1) {
                 key.getData().setLinkedTo(key.getOwner());
                 key.save(); //doesn't matter if it doesn't save immediately, will do later anyway (key is usually immutable in db)
             }
@@ -124,14 +125,14 @@ public class DBGuild implements ManagedObject {
 
         //Patreon bot link check.
         String linkedTo = getData().getMpLinkedTo();
-        if (config.isPremiumBot() && linkedTo != null && key == null) { //Key should always be null in MP anyway.
-            Pair<Boolean, String> pledgeInfo = APIUtils.getPledgeInformation(linkedTo);
+        if (config.isPremiumBot() && linkedTo != null && key == null) { // Key should always be null in MP anyway.
+            PatreonPledge pledgeInfo = APIUtils.getPledgeInformation(linkedTo);
             // The API returned an exception, return true anyway. (Pledge = false, amount = 100000 is basically impossible)
-            if (pledgeInfo != null && !pledgeInfo.getLeft() && pledgeInfo.getRight().equals("100000")) {
+            if (pledgeInfo != null && !pledgeInfo.isActive() && pledgeInfo.getAmount() == 100000) {
                 return true;
             }
 
-            if (pledgeInfo != null && pledgeInfo.getLeft() && Double.parseDouble(pledgeInfo.getRight()) >= 4) {
+            if (pledgeInfo != null && pledgeInfo.isActive() && pledgeInfo.getReward().isPatreonBot()) {
                 // Subscribed to MP properly, return true.
                 return true;
             }

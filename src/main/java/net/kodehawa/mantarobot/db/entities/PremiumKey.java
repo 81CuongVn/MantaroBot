@@ -24,6 +24,7 @@ import net.kodehawa.mantarobot.db.ManagedObject;
 import net.kodehawa.mantarobot.db.entities.helpers.PremiumKeyData;
 import net.kodehawa.mantarobot.utils.APIUtils;
 import net.kodehawa.mantarobot.utils.Pair;
+import net.kodehawa.mantarobot.utils.patreon.PatreonPledge;
 
 import javax.annotation.Nonnull;
 import java.beans.ConstructorProperties;
@@ -105,8 +106,8 @@ public class PremiumKey implements ManagedObject {
     @JsonIgnore
     public boolean renew() {
         if (data.getLinkedTo() != null && !data.getLinkedTo().isEmpty()) {
-            Pair<Boolean, String> pledgeInfo = APIUtils.getPledgeInformation(data.getLinkedTo());
-            if (pledgeInfo != null && pledgeInfo.getLeft()) {
+            PatreonPledge pledgeInfo = APIUtils.getPledgeInformation(data.getLinkedTo());
+            if (pledgeInfo != null && pledgeInfo.isActive()) {
                 switch (type) {
                     //user
                     case 1 -> this.activate(365);
